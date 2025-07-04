@@ -1,6 +1,5 @@
 from fastapi import FastAPI, UploadFile, Form, File
 from fastapi.responses import JSONResponse, FileResponse
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from PyPDF2 import PdfReader
 from sklearn.feature_extraction.text import TfidfVectorizer
