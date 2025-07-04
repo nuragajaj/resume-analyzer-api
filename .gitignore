@@ -1,0 +1,16 @@
+# Ignore all venv-style folders
+venv/
+.venv/
+venc/
+
+# Ignore Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# VS Code settings
+.vscode/
+
+# Misc
+.DS_Store
+.env
