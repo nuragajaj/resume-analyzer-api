@@ -1,4 +1,7 @@
-from fastapi import FastAPI, File, UploadFile, Form
+from fastapi import FastAPI, UploadFile, Form, File
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from PyPDF2 import PdfReader
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -6,40 +9,48 @@ import os
 
 app = FastAPI()
 
-@app.get("/")
-def read_root():
-    return {"message": "👋 Welcome to the Resume Analyzer API! Upload your resume and get a match score against a job description."}
+# Allow frontend (optional for local testing or external UI)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
+# Serve index.html as frontend UI
+@app.get("/", response_class=FileResponse)
+def serve_ui():
+    return "index.html"
+
+# Mount current folder as static (for index.html, CSS, etc.)
+app.mount("/static", StaticFiles(directory="."), name="static")
 
 @app.post("/analyze-resume/")
-async def analyze_resume(
-    file: UploadFile = File(...),
-    job_description: str = Form(...)
-):
-    #Save the uploaded PDF temporarily
-    file_location = "temp_resume.pdf"
-    with open(file_location, "wb") as f:
-        f.write(await file.read())
-
-    #Extract text from resume
+async def analyze_resume(file: UploadFile = File(...), job_description: str = Form(...)):
     try:
-        reader = PdfReader(file_location)
-        resume_text = "".join([page.extract_text() or "" for page in reader.pages])
-    except:
-        return {"error": "❌ Failed to read the PDF. Please upload a valid resume."}
-    finally:
-        os.remove(file_location)  # cleanup
+        # Read PDF resume text
+        contents = await file.read()
+        with open("temp_resume.pdf", "wb") as f:
+            f.write(contents)
 
-    #Use TF-IDF to compare resume and JD
-    documents = [resume_text, job_description]
-    vectorizer = TfidfVectorizer()
-    vectors = vectorizer.fit_transform(documents)
+        reader = PdfReader("temp_resume.pdf")
+        resume_text = ""
+        for page in reader.pages:
+            resume_text += page.extract_text() or ""
 
-    similarity_score = cosine_similarity(vectors[0:1], vectors[1:2])[0][0] * 100
+        # TF-IDF similarity
+        documents = [resume_text, job_description]
+        vectorizer = TfidfVectorizer()
+        vectors = vectorizer.fit_transform(documents)
+        score = cosine_similarity(vectors[0:1], vectors[1:2])[0][0] * 100
 
-    result = {
-        "match_percentage": round(similarity_score, 2),
-        "verdict": "✅ Strong match!" if similarity_score > 60 else "⚠️ Could be improved."
-    }
+        verdict = "✅ Strong match!" if score >= 75 else "⚠️ Moderate/low match"
 
-    return result
+        return JSONResponse({
+            "match_percentage": score,
+            "verdict": verdict
+        })
+
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
