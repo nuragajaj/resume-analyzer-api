@@ -36,4 +36,3 @@ Install the required dependencies:
 
 ```bash
 pip install -r requirements.txt
-## 🌐 Live Demo
