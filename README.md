@@ -25,6 +25,10 @@ A FastAPI-powered microservice that analyzes resumes against job descriptions an
 | VS Code         | Code editor                      |
 
 ---
+## 🌐 Live Demo
+
+Try the live Resume Analyzer API here:  
+👉 [https://resume-analyzer-api-x206.onrender.com/docs](https://resume-analyzer-api-x206.onrender.com/docs)
 
 ## 📦 Installation
 
@@ -33,6 +37,3 @@ Install the required dependencies:
 ```bash
 pip install -r requirements.txt
 ## 🌐 Live Demo
-
-Try the live Resume Analyzer API here:  
-👉 [https://resume-analyzer-api-x206.onrender.com/docs](https://resume-analyzer-api-x206.onrender.com/docs)
